@@ -1,0 +1,6 @@
+{
+  "name": "Livsera ERP - Healthcare Management System",
+  "description": "Modern enterprise healthcare ERP for real-time inventory management, predictive AI demand forecasting, low stock alerts, clinical orders, and operational reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
