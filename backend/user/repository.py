@@ -4,7 +4,7 @@ from user.models import User
 from user.schema import EmployeeData
 import core.security
 import uuid6
-from auth.models import RevokedToken
+from auth.models import RevokedToken,RefreshToken
 from datetime import datetime
 def search_employee(emp_id:str,db:Session):
     stmt=select(User).where(User.emp_id==emp_id)
@@ -60,8 +60,20 @@ def account_enable_disable(db:Session,user:User):
     db.refresh(user)
 
 
-def token_expire(db:Session,jti:str,expire_at:datetime):
+def access_token_expire(db:Session,jti:str,expire_at:datetime):
     data=RevokedToken(
+        jti=jti,
+        expires_at=expire_at
+
+    )
+
+    db.add(data)
+    db.commit()
+
+    return data
+
+def refresh_token_expire(db:Session,jti:str,expire_at:datetime):
+    data=RefreshToken(
         jti=jti,
         expires_at=expire_at
 

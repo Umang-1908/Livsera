@@ -28,20 +28,13 @@ class RevokedToken(Base):
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
-
     id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True
     )
 
-    user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False,
-        index=True
-    )
-
-    token_hash: Mapped[str] = mapped_column(
-        String(128),
+    jti: Mapped[str] = mapped_column(
+        String(36),
         unique=True,
         nullable=False
     )
@@ -51,17 +44,7 @@ class RefreshToken(Base):
         nullable=False
     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc)
-    )
-
-    revoked_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
-        nullable=True
-    )
 
 
-Base.metadata.create_all(bind=engine)
+
 
