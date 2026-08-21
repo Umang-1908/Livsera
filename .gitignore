@@ -1,17 +1,32 @@
-# Python
-__pycache__/
-*.pyc
+# Virtual Environments
+env/
 venv/
 .venv/
+ENV/
 
-# Node
-node_modules/
-dist/
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
-# Environment
+# Database files (Local)
+*.db
+*.sqlite3
+*.sqlite
+
+# Environment & Secrets
 .env
 .env.local
+.env.*.local
 
-# IDE
+# Node & Build artifacts
+node_modules/
+dist/
+build/
+
+# IDE & OS Files
 .idea/
 .vscode/
+.DS_Store
+*.log
