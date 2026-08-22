@@ -20,7 +20,7 @@ class EmployeeData(BaseModel):
     phone:str=Field(pattern=r"^\d{10}$")
     password: str = Field(
         min_length=8,
-        max_length=64,
+        max_length=72,
 
     )
 

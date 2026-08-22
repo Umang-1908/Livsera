@@ -1,23 +1,26 @@
 from core.config import ACCESS_SECRETKEY,ALGORITHM,REFRESH_SECRETKEY
-from passlib.context import CryptContext
+import bcrypt
 from jose import jwt
 from datetime import timedelta,timezone,datetime
 from uuid import uuid4
 
 
-pwd=CryptContext(schemes=['bcrypt'],deprecated='auto')
-
-def hash_password(password:str):
-    return pwd.hash(password)
 
 
-def verify_password(password:str,hashed_password:str):
-    return pwd.verify(password,hashed_password)
+def hash_password(password: str) -> str:
+    pwd_bytes = password.encode('utf-8')[:72]
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
 
-def create_access_token(data:dict,expiretime:timedelta|None=None):
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    pwd_bytes = plain_password.encode('utf-8')[:72]
+    hashed_bytes = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(pwd_bytes, hashed_bytes)
+
+def create_access_token(data:dict,expiretime:int|None=None):
     to_encoded=data.copy()
     if expiretime:
-        expires=datetime.now(timezone.utc)+expiretime
+        expires=datetime.now(timezone.utc)+timedelta(minutes=expiretime)
     else:
         expires=datetime.now(timezone.utc)+timedelta(minutes=15)
 
@@ -32,10 +35,10 @@ def access_decode_token(token:str):
 def refresh_decode_token(token:str):
     return jwt.decode(token,REFRESH_SECRETKEY,algorithms=[ALGORITHM])
 
-def create_refresh_token(data:dict,expiretime:timedelta|None=None):
+def create_refresh_token(data:dict,expiretime:int|None=None):
     to_encoded=data.copy()
     if expiretime:
-        expires=datetime.now(timezone.utc)+expiretime
+        expires=datetime.now(timezone.utc)+timedelta(days=expiretime)
     else:
         expires=datetime.now(timezone.utc)+timedelta(days=7)
 

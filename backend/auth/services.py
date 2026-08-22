@@ -1,10 +1,9 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from fastapi import Depends,Cookie
-from user.repository import search_employee,account_activation,account_enable_disable,access_token_expire
+from user.repository import search_employee,account_activation,account_enable_disable,access_token_expire,refresh_token_expire
 from core.security import verify_password,create_access_token,hash_password,create_refresh_token,access_decode_token,refresh_decode_token
 from core.exceptions import AppException
-from core.config import ACCESS_TOKEN_EXPIRE_TIME
+from core.config import ACCESS_TOKEN_EXPIRE_TIME,REFRESH_TOKEN_EXPIRE_TIME
 from user.models import User
 from datetime import datetime,timezone
 from typing import Optional
@@ -29,7 +28,7 @@ def authenticate(db: Session, emp_id: str, password: str):
 
 
     access_token = create_access_token(payload_data, ACCESS_TOKEN_EXPIRE_TIME)
-    refresh_token = create_refresh_token(payload_data)
+    refresh_token = create_refresh_token(payload_data,REFRESH_TOKEN_EXPIRE_TIME)
 
     return {
         "access_token": access_token,
@@ -49,7 +48,6 @@ def password_update(old_password:str,new_password:str,db:Session,user:User):
     user.hashed_password=hash_password(new_password)
 
     db.commit()
-    db.refresh(user)
     return {"message": "Password changed Successfully"}
 
 
@@ -59,21 +57,41 @@ def account_update(db:Session,emp_id):
         AppException.user_not_found()
     return account_enable_disable(db,user)
 
-def revoke_token(db: Session, token: str):
 
-    payload = access_decode_token(token)
+def revoke_accesstoken(db: Session, token: str):
+    try:
+        payload = access_decode_token(token)
+        jti = payload.get("jti")
+        exp = payload.get("exp")
 
-    jti = payload["jti"]
-    expires_at = datetime.fromtimestamp(
-        payload["exp"],
-        tz=timezone.utc
-    )
+        if not jti or not exp:
+            return None
 
-    return access_token_expire(db,jti,expires_at)
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+        return access_token_expire(db, jti, expires_at)
+    except JWTError:
+        return None
+
+def revoke_refreshtoken(db: Session, token: Optional[str] = None):
+    if not token:
+        return None
+
+    try:
+        payload = refresh_decode_token(token)
+        jti = payload.get("jti")
+        exp = payload.get("exp")
+
+        if not jti or not exp:
+            return None
+
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+        return refresh_token_expire(db, jti, expires_at)
+    except JWTError:
+        return None
 
 
 def refresh_auth_token(
-    db:Session,refresh_token: Optional[str] = Cookie(None),
+    db:Session,refresh_token: Optional[str] = None,
 
 ):
     if not refresh_token:
@@ -97,7 +115,7 @@ def refresh_auth_token(
             AppException.unauthorized()
 
         new_access_token = create_access_token(
-            data={"sub": emp_id},
+            {"sub":emp_id},
             expiretime=ACCESS_TOKEN_EXPIRE_TIME
         )
 
