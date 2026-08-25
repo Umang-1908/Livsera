@@ -44,7 +44,7 @@ def delete_account(current_user:User=Depends(current_users),db:Session=Depends(g
     return  account_update(db,current_user.emp_id)
 
 
-@router.post("/logout")
+
 @router.post("/logout")
 def logout(
     response: Response,

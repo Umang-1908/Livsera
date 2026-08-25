@@ -7,6 +7,7 @@ from alembic import context
 from core.database import Base
 from auth.models import  RevokedToken, RefreshToken
 from user.models import User
+from inventory.models import Medicine
 from core.config import DATABASEURL
 
 # this is the Alembic Config object, which provides
